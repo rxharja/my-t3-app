@@ -1,20 +1,16 @@
-import { TodoItem, TodoList } from "@prisma/client";
+import { TodoItem } from "@prisma/client";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { match, P } from "ts-pattern";
 import { trpc } from "../../utils/trpc";
-
-type ListWithItems = (TodoList & { TodoItems: TodoItem[] }) | undefined;
 
 const TodoList: NextPage = () => {
   const id = useRouter().query.id as string;
 
-  const hasItems = (list: ListWithItems) =>
-    list?.TodoItems != null && list?.TodoItems?.length > 0;
-
   const [todoList, setTodoList] = useState(
     trpc.todoLists.getList.useQuery({
-      id: id,
+      id: id
     }).data
   );
 
@@ -24,7 +20,7 @@ const TodoList: NextPage = () => {
     const list = (
       await setItemCompletion.mutateAsync({
         id: item.id,
-        done: item.done ? false : true,
+        done: !item.done
       })
     )?.TodoList;
 
@@ -38,15 +34,13 @@ const TodoList: NextPage = () => {
           <span className="text-purple-300">{todoList?.name}</span>
         </h1>
         <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500"></div>
-        {hasItems(todoList) ? (
-          todoList?.TodoItems.map((itm) => (
+        {match(todoList)
+          .with(P.nullish, { TodoItems: [] }, () => <p>No Items</p>)
+          .with({ TodoItems: P.select("itms") }, ({ itms }) => itms.map((itm) => (
             <div key={itm.id} onClick={() => complete(itm)}>
               <Todo item={itm} />
             </div>
-          ))
-        ) : (
-          <p>No Items</p>
-        )}
+          ))).exhaustive()}
       </main>
     </>
   );
