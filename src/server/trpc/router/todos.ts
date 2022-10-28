@@ -20,10 +20,5 @@ export const todoRouter = router({
         where: { id: input.id },
         data: { done: input.done },
       });
-
-      return ctx.prisma.todoItem.findFirst({
-        where: { id: input.id },
-        select: { TodoList: { include: { TodoItems: true } } },
-      });
     }),
 });
