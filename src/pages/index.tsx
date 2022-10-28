@@ -6,7 +6,7 @@ import { TodoList } from "@prisma/client";
 import Link from "next/link";
 
 const Home: NextPage = () => {
-  const lists = trpc.todoLists.getAllLists.useQuery().data;
+  const { data } = trpc.todoLists.getAllLists.useQuery();
 
   return (
     <>
@@ -20,7 +20,7 @@ const Home: NextPage = () => {
           <span className="text-purple-300">Todo</span> Lists
         </h1>
         <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500">
-          {lists?.map(listInfo)}
+          {data?.map(listInfo)}
         </div>
         <AuthShowcase />
       </main>
