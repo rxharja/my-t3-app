@@ -10,6 +10,12 @@ import { env } from "../../../env/server.mjs";
 export const authOptions: NextAuthOptions = {
   // Include user.id on session
   callbacks: {
+    jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
     session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
@@ -20,25 +26,10 @@ export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
   adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-          placeholder: "jsmith@a2a.com",
-        },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials, req) {
-        return prisma.user.findFirst({
-          where: { email: credentials?.email, password: credentials?.password },
-        });
-      },
-    }),
     DiscordProvider({
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
+      authorization: { params: { scope: ["identify"].join(" ") } },
     }),
     GitHubProvider({
       clientId: env.GITHUB_CLIENT_ID,
