@@ -12,7 +12,7 @@ const TodoList: NextPage = () => {
     refetch,
     isLoading,
   } = trpc.todoLists.getList.useQuery(
-    { id: id },
+    { id },
     {
       refetchInterval: false,
       refetchOnReconnect: false,
