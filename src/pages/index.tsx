@@ -8,6 +8,8 @@ import Link from "next/link";
 const Home: NextPage = () => {
   const { data } = trpc.todoLists.getAllLists.useQuery();
 
+  const { data: session } = useSession();
+
   return (
     <>
       <Head>
@@ -20,7 +22,13 @@ const Home: NextPage = () => {
           <span className="text-purple-300">Todo</span> Lists
         </h1>
         <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500">
-          {data?.map(listInfo)}
+          {session?.user && (
+            <div>
+              <h3>Lists</h3>
+              {data?.map(listInfo)}
+            </div>
+          )}
+          {!session?.user && <p>Please sign in to view your lists</p>}
         </div>
         <AuthShowcase />
       </main>
