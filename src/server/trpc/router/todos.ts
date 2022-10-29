@@ -1,11 +1,11 @@
-import { router, publicProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const todoRouter = router({
-  getAllLists: publicProcedure.query(({ ctx }) =>
+  getAllLists: protectedProcedure.query(({ ctx }) =>
     ctx.prisma.todoList.findMany()
   ),
-  getList: publicProcedure
+  getList: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(({ ctx, input }) =>
       ctx.prisma.todoList.findUniqueOrThrow({
@@ -13,7 +13,7 @@ export const todoRouter = router({
         include: { TodoItems: true },
       })
     ),
-  updateItemCompletion: publicProcedure
+  updateItemCompletion: protectedProcedure
     .input(z.object({ id: z.string(), done: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.todoItem.update({
