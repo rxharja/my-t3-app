@@ -31,4 +31,11 @@ export const todoRouter = router({
         data: { name: input.name, userId: ctx.session.user.id },
       });
     }),
+  addItem: protectedProcedure
+    .input(z.object({ name: z.string(), listId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.todoItem.create({
+        data: { name: input.name, todoListId: input.listId },
+      });
+    }),
 });
