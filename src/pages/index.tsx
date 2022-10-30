@@ -8,11 +8,9 @@ import { match, P } from "ts-pattern";
 import { useState } from "react";
 
 const Home: NextPage = () => {
-  const { data } = trpc.todoLists.getAllLists.useQuery();
+  const { data, refetch } = trpc.todoLists.getAllLists.useQuery();
 
   const { data: session } = useSession();
-
-  const [add, setAdd] = useState(true);
 
   return (
     <>
@@ -30,25 +28,7 @@ const Home: NextPage = () => {
             <>
               <div className="flex w-full flex-row items-center justify-center">
                 {data?.map(ListCard)}
-                {add && (
-                  <button
-                    className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
-                    onClick={() => setAdd(false)}
-                  >
-                    +
-                  </button>
-                )}
-                {!add && (
-                  <>
-                    <AddListCard />
-                    <button
-                      className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
-                      onClick={() => setAdd(true)}
-                    >
-                      -
-                    </button>
-                  </>
-                )}
+                <AddList refetch={refetch} />
               </div>
             </>
           )}
@@ -97,37 +77,62 @@ const ListCard = (list: TodoList & { TodoItems: TodoItem[] }) => {
   );
 };
 
-const AddListCard = () => {
+const AddList = ({ refetch }: any) => {
   const [name, setName] = useState("");
-
+  const [add, setAdd] = useState(true);
   const addListMutation = trpc.todoLists.addList.useMutation();
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) =>
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAdd(true);
+    setName("");
     await addListMutation.mutateAsync({ name });
+    await refetch();
+  };
 
   return (
-    <div className="m-2 block h-48 w-48 max-w-sm rounded-lg bg-white p-6 shadow-lg">
-      <form onSubmit={onSubmit}>
-        <label className="text-base text-gray-700" htmlFor="listName">
-          List Name:
-        </label>
-        <input
-          className="w-32 border-b-2 border-b-gray-500"
-          type="text"
-          id="list-name"
-          name="listName"
-          onChange={(e) => setName(e.target.value)}
-          value={name}
-        />
-        <div className="p-4" />
+    <>
+      {add && (
         <button
-          className="rounded-xl bg-purple-100 p-2 text-gray-500"
-          type="submit"
+          className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
+          onClick={() => setAdd(false)}
         >
-          Submit
+          +
         </button>
-      </form>
-    </div>
+      )}
+      {!add && (
+        <>
+          <div className="m-2 block h-48 w-48 max-w-sm rounded-lg bg-white p-6 shadow-lg">
+            <form onSubmit={onSubmit}>
+              <label className="text-base text-gray-700" htmlFor="listName">
+                List Name:
+              </label>
+              <input
+                className="w-32 border-b-2 border-b-gray-500"
+                type="text"
+                id="list-name"
+                name="listName"
+                onChange={(e) => setName(e.target.value)}
+                value={name}
+              />
+              <div className="p-4" />
+              <button
+                className="rounded-xl bg-purple-100 p-2 text-gray-500"
+                type="submit"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+          <button
+            className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
+            onClick={() => setAdd(true)}
+          >
+            -
+          </button>
+        </>
+      )}
+    </>
   );
 };
 
