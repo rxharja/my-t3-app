@@ -63,7 +63,7 @@ model VerificationToken {
 model TodoItem {
   id         String   @id @default(uuid())
   name       String
-  done       Boolean
+  done       Boolean  @default(false)
   todoListId String
   TodoList   TodoList @relation(fields: [todoListId], references: [id])
 }
