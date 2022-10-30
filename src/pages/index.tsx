@@ -2,13 +2,17 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "../utils/trpc";
-import { TodoList } from "@prisma/client";
+import { TodoItem, TodoList } from "@prisma/client";
 import Link from "next/link";
+import { match, P } from "ts-pattern";
+import { useState } from "react";
 
 const Home: NextPage = () => {
   const { data } = trpc.todoLists.getAllLists.useQuery();
 
   const { data: session } = useSession();
+
+  const [add, setAdd] = useState(true);
 
   return (
     <>
@@ -21,12 +25,32 @@ const Home: NextPage = () => {
         <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
           <span className="text-purple-300">Todo</span> Lists
         </h1>
-        <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500">
+        <div className="flex w-full flex-col items-center justify-between pt-6 text-2xl text-blue-500">
           {session?.user && (
-            <div>
-              <h3>Lists</h3>
-              {data?.map(listInfo)}
-            </div>
+            <>
+              <div className="flex w-full flex-row items-center justify-center">
+                {data?.map(ListCard)}
+                {add && (
+                  <button
+                    className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
+                    onClick={() => setAdd(false)}
+                  >
+                    +
+                  </button>
+                )}
+                {!add && (
+                  <>
+                    <AddListCard />
+                    <button
+                      className="m-2 h-12 w-12 rounded-xl bg-purple-300 text-gray-100"
+                      onClick={() => setAdd(true)}
+                    >
+                      -
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
           )}
           {!session?.user && <p>Please sign in to view your lists</p>}
         </div>
@@ -36,17 +60,80 @@ const Home: NextPage = () => {
   );
 };
 
-const listInfo = (list: TodoList) => (
-  <Link key={list.id} href={`lists/${list.id}`}>
-    <a>{list.name}</a>
-  </Link>
-);
+const ListCard = (list: TodoList & { TodoItems: TodoItem[] }) => {
+  return (
+    <Link key={list.id} href={`lists/${list.id}`}>
+      <div className="m-2 block h-48 w-48 max-w-sm cursor-pointer rounded-lg bg-white p-6 shadow-lg">
+        <h5 className="mb-2 text-xl font-medium leading-tight text-gray-900">
+          {list.name}
+        </h5>
+        {match(list.TodoItems)
+          .with([P.select(), P._], (itm) => (
+            <>
+              <p className="mb-4 text-base text-gray-700">
+                Next Item: {itm.name}
+              </p>
+              <p>{list.TodoItems.length} items left</p>
+            </>
+          ))
+          .with([P.select()], (itm) => (
+            <>
+              <p className="mb-4 text-base text-gray-700">
+                Last Item: {itm.name}
+              </p>
+              <p>1 item left</p>
+            </>
+          ))
+          .with([], () => (
+            <>
+              <p className="mb-4 text-base text-gray-700">No Items To Do</p>
+              <p>Add More?</p>
+            </>
+          ))
+          .with(P._, () => <p>This can never happen lol</p>)
+          .exhaustive()}
+      </div>
+    </Link>
+  );
+};
+
+const AddListCard = () => {
+  const [name, setName] = useState("");
+
+  const addListMutation = trpc.todoLists.addList.useMutation();
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) =>
+    await addListMutation.mutateAsync({ name });
+
+  return (
+    <div className="m-2 block h-48 w-48 max-w-sm rounded-lg bg-white p-6 shadow-lg">
+      <form onSubmit={onSubmit}>
+        <label className="text-base text-gray-700" htmlFor="listName">
+          List Name:
+        </label>
+        <input
+          className="w-32 border-b-2 border-b-gray-500"
+          type="text"
+          id="list-name"
+          name="listName"
+          onChange={(e) => setName(e.target.value)}
+          value={name}
+        />
+        <div className="p-4" />
+        <button
+          className="rounded-xl bg-purple-100 p-2 text-gray-500"
+          type="submit"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+};
 
 export default Home;
 
 const AuthShowcase: React.FC = () => {
-  const { data: secretMessage } = trpc.auth.getSecretMessage.useQuery();
-
   const { data: sessionData } = useSession();
 
   return (
@@ -55,9 +142,6 @@ const AuthShowcase: React.FC = () => {
         <p className="text-2xl text-blue-500">
           Logged in as {sessionData?.user?.name}
         </p>
-      )}
-      {secretMessage && (
-        <p className="text-2xl text-blue-500">{secretMessage}</p>
       )}
       <button
         className="rounded-md border border-black bg-violet-50 px-4 py-2 text-xl shadow-lg hover:bg-violet-100"
