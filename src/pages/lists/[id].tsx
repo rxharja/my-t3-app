@@ -22,6 +22,7 @@ const TodoList: NextPage = () => {
   );
 
   const setItemCompletion = trpc.todoLists.updateItemCompletion.useMutation();
+  const deleteItem = trpc.todoLists.removeItem.useMutation();
 
   const complete = async (item: TodoItem) => {
     await setItemCompletion.mutateAsync({
@@ -30,6 +31,12 @@ const TodoList: NextPage = () => {
     });
 
     await refetch();
+  };
+
+  const onDelete = async (item: TodoItem) => {
+    await deleteItem.mutateAsync({
+      id: item.id,
+    });
   };
 
   if (isLoading) return <p>Loading...</p>;
@@ -51,39 +58,28 @@ const TodoList: NextPage = () => {
               ))
             )
             .exhaustive()}
-          <AddItem refetch={refetch} listId={id} />
+          <AddItem listId={id} />
         </main>
       </>
     );
 };
 
 const Todo: React.FC<{ item: TodoItem }> = ({ item }) => (
-  <p
-    id={item.id}
-    key={item.id}
-    className={`text-xl ${item.done ? "line-through" : ""}`}
-  >
-    {item.name}
-  </p>
+  <p className={`text-xl ${item.done ? "line-through" : ""}`}>{item.name}</p>
 );
 
-const AddItem = ({
-  refetch,
-  listId,
-}: {
-  refetch: () => void;
-  listId: string;
-}) => {
+const AddItem = ({ listId }: { listId: string }) => {
   const [name, setName] = useState("");
   const [add, setAdd] = useState(true);
   const addItemMutation = trpc.todoLists.addItem.useMutation();
+  const { refetch } = trpc.useContext().todoLists.getList;
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAdd(true);
     setName("");
     await addItemMutation.mutateAsync({ name, listId });
-    await refetch();
+    await refetch({ id: listId });
   };
 
   return (
@@ -100,7 +96,6 @@ const AddItem = ({
         <>
           <form onSubmit={onSubmit}>
             <div className="flex flex-row">
-              <div className="mx-12"></div>
               <input
                 className="w-32 border-b-2 border-b-gray-500"
                 type="text"
@@ -110,7 +105,7 @@ const AddItem = ({
                 value={name}
               />
               <button
-                className="rounded-xl bg-purple-100 p-2 text-gray-500"
+                className="hidden rounded-xl bg-purple-100 p-2 text-gray-500"
                 type="submit"
               >
                 Submit

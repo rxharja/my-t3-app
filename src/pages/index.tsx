@@ -28,7 +28,7 @@ const Home: NextPage = () => {
             <>
               <div className="flex w-full flex-row items-center justify-center">
                 {data?.map(ListCard)}
-                <AddList refetch={refetch} />
+                <AddList />
               </div>
             </>
           )}
@@ -48,10 +48,10 @@ const ListCard = (list: TodoList & { TodoItems: TodoItem[] }) => {
           {list.name}
         </h5>
         {match(list.TodoItems)
-          .with([P.select(), P._], (itm) => (
+          .with(P.array({ name: P.string }), ([itm, ..._]) => (
             <>
               <p className="mb-4 text-base text-gray-700">
-                Next Item: {itm.name}
+                Next Item: {itm?.name}
               </p>
               <p>{list.TodoItems.length} items left</p>
             </>
@@ -70,17 +70,17 @@ const ListCard = (list: TodoList & { TodoItems: TodoItem[] }) => {
               <p>Add More?</p>
             </>
           ))
-          .with(P._, () => <p>This can never happen lol</p>)
           .exhaustive()}
       </div>
     </Link>
   );
 };
 
-const AddList = ({ refetch }: any) => {
+const AddList = () => {
   const [name, setName] = useState("");
   const [add, setAdd] = useState(true);
   const addListMutation = trpc.todoLists.addList.useMutation();
+  const { refetch } = trpc.useContext().todoLists.getAllLists;
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
