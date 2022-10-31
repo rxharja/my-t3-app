@@ -38,4 +38,14 @@ export const todoRouter = router({
         data: { name: input.name, todoListId: input.listId },
       });
     }),
+  removeList: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.todoList.delete({ where: { id: input.id } });
+    }),
+  removeItem: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.todoItem.delete({ where: { id: input.id } });
+    }),
 });
