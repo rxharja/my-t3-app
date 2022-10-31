@@ -8,7 +8,7 @@ import { match, P } from "ts-pattern";
 import { useState } from "react";
 
 const Home: NextPage = () => {
-  const { data, refetch } = trpc.todoLists.getAllLists.useQuery();
+  const { data } = trpc.todoLists.getAllLists.useQuery();
 
   const { data: session } = useSession();
 
@@ -27,7 +27,9 @@ const Home: NextPage = () => {
           {session?.user && (
             <>
               <div className="flex w-full flex-row items-center justify-center">
-                {data?.map(ListCard)}
+                {data?.map((l) => (
+                  <ListCard list={l} />
+                ))}
                 <AddList />
               </div>
             </>
@@ -40,39 +42,61 @@ const Home: NextPage = () => {
   );
 };
 
-const ListCard = (list: TodoList & { TodoItems: TodoItem[] }) => {
+const ListCard = ({ list }: { list: TodoList & { TodoItems: TodoItem[] } }) => {
+  const removeList = trpc.todoLists.removeList.useMutation();
+  const { refetch } = trpc.useContext().todoLists.getAllLists;
+
+  const onDelete = async (id: string) => {
+    await removeList.mutateAsync({ id });
+    await refetch();
+  };
+
   return (
-    <Link key={list.id} href={`lists/${list.id}`}>
-      <div className="m-2 block h-48 w-48 max-w-sm cursor-pointer rounded-lg bg-white p-6 shadow-lg">
+    <div className="m-2 block h-48 w-48 max-w-sm rounded-lg bg-white p-6 shadow-lg">
+      <div className="flex justify-between">
         <h5 className="mb-2 text-xl font-medium leading-tight text-gray-900">
           {list.name}
         </h5>
-        {match(list.TodoItems)
-          .with(P.array({ name: P.string }), ([itm, ..._]) => (
-            <>
-              <p className="mb-4 text-base text-gray-700">
-                Next Item: {itm?.name}
-              </p>
-              <p>{list.TodoItems.length} items left</p>
-            </>
-          ))
-          .with([P.select()], (itm) => (
-            <>
-              <p className="mb-4 text-base text-gray-700">
-                Last Item: {itm.name}
-              </p>
-              <p>1 item left</p>
-            </>
-          ))
-          .with([], () => (
-            <>
-              <p className="mb-4 text-base text-gray-700">No Items To Do</p>
-              <p>Add More?</p>
-            </>
-          ))
-          .exhaustive()}
+        <h5
+          className="mb-2 cursor-pointer text-xl font-medium leading-tight text-gray-300 hover:text-red-400"
+          onClick={() => onDelete(list.id)}
+        >
+          x
+        </h5>
       </div>
-    </Link>
+      {match(list.TodoItems)
+        .with([], () => (
+          <>
+            <p className="mb-4 text-base text-gray-700">No Items To Do</p>
+            <Link key={list.id} href={`lists/${list.id}`}>
+              <p className="cursor-pointer">Add More?</p>
+            </Link>
+          </>
+        ))
+        .with([P.select()], (itm) => (
+          <>
+            <p className="mb-4 text-base text-gray-700">
+              Last Item: {itm.name}
+            </p>
+            <Link key={list.id} href={`lists/${list.id}`}>
+              <p className="cursor-pointer">View Last Item</p>
+            </Link>
+          </>
+        ))
+        .with(P.array({ name: P.string }), ([itm, ..._]) => (
+          <>
+            <p className="mb-4 text-base text-gray-700">
+              Next Item: {itm?.name}
+            </p>
+            <Link key={list.id} href={`lists/${list.id}`}>
+              <p className="cursor-pointer">
+                View {list.TodoItems.length} items
+              </p>
+            </Link>
+          </>
+        ))
+        .exhaustive()}
+    </div>
   );
 };
 

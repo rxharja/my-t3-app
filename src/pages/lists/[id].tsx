@@ -61,7 +61,7 @@ const TodoList: NextPage = () => {
                     className="cursor-pointer text-lg text-gray-400 hover:text-red-500"
                     onClick={() => onDelete(itm)}
                   >
-                    X
+                    x
                   </p>
                 </div>
               ))
