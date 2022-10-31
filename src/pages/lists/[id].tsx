@@ -37,6 +37,7 @@ const TodoList: NextPage = () => {
     await deleteItem.mutateAsync({
       id: item.id,
     });
+    await refetch();
   };
 
   if (isLoading) return <p>Loading...</p>;
@@ -52,8 +53,16 @@ const TodoList: NextPage = () => {
             .with(P.nullish, { TodoItems: [] }, () => <p>No Items</p>)
             .with({ TodoItems: P.select("itms") }, ({ itms }) =>
               itms.map((itm) => (
-                <div key={itm.id} onClick={() => complete(itm)}>
-                  <Todo item={itm} />
+                <div className="flex w-48 justify-between">
+                  <div key={itm.id} onClick={() => complete(itm)}>
+                    <Todo item={itm} />
+                  </div>
+                  <p
+                    className="cursor-pointer text-lg text-gray-400 hover:text-red-500"
+                    onClick={() => onDelete(itm)}
+                  >
+                    X
+                  </p>
                 </div>
               ))
             )
@@ -97,7 +106,7 @@ const AddItem = ({ listId }: { listId: string }) => {
           <form onSubmit={onSubmit}>
             <div className="flex flex-row">
               <input
-                className="w-32 border-b-2 border-b-gray-500"
+                className="w-48 border-b-2 border-b-gray-500"
                 type="text"
                 id="list-name"
                 name="listName"
