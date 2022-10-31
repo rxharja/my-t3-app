@@ -65,7 +65,7 @@ model TodoItem {
   name       String
   done       Boolean  @default(false)
   todoListId String
-  TodoList   TodoList @relation(fields: [todoListId], references: [id])
+  TodoList   TodoList @relation(fields: [todoListId], references: [id], onDelete: Cascade)
 }
 
 model TodoList {
