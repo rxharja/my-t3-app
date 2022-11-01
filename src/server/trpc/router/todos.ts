@@ -16,14 +16,6 @@ export const todoRouter = router({
         include: { TodoItems: true },
       })
     ),
-  updateItemCompletion: protectedProcedure
-    .input(z.object({ id: z.string(), done: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.prisma.todoItem.update({
-        where: { id: input.id },
-        data: { done: input.done },
-      });
-    }),
   addList: protectedProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -39,17 +31,25 @@ export const todoRouter = router({
         where: { id: input.id },
       });
     }),
+  removeList: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.todoList.delete({ where: { id: input.id } });
+    }),
+  updateItemCompletion: protectedProcedure
+    .input(z.object({ id: z.string(), done: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.todoItem.update({
+        where: { id: input.id },
+        data: { done: input.done },
+      });
+    }),
   addItem: protectedProcedure
     .input(z.object({ name: z.string(), listId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.todoItem.create({
         data: { name: input.name, todoListId: input.listId },
       });
-    }),
-  removeList: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.prisma.todoList.delete({ where: { id: input.id } });
     }),
   removeItem: protectedProcedure
     .input(z.object({ id: z.string() }))
