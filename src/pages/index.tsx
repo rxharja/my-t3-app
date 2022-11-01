@@ -111,7 +111,7 @@ const ListCard = ({ list }: { list: TodoList & { TodoItems: TodoItem[] } }) => {
             </Link>
           </>
         ))
-        .with(P.array({ name: P.string }), ([itm, ..._]) => (
+        .with(P.array({ name: P.string }), ([itm]) => (
           <>
             <p className="mb-4 text-base text-gray-700">
               Next Item: {itm?.name}
