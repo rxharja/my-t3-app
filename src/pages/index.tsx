@@ -44,7 +44,19 @@ const Home: NextPage = () => {
 
 const ListCard = ({ list }: { list: TodoList & { TodoItems: TodoItem[] } }) => {
   const removeList = trpc.todoLists.removeList.useMutation();
+  const renameList = trpc.todoLists.renameList.useMutation();
   const { refetch } = trpc.useContext().todoLists.getAllLists;
+  const [edit, setEdit] = useState(false);
+  const [name, setName] = useState(list.name);
+
+  const onRename = async (
+    e: React.FormEvent<HTMLFormElement>,
+    list: { id: string; name: string }
+  ) => {
+    e?.preventDefault();
+    await renameList.mutateAsync({ id: list.id, name: list.name });
+    setEdit(false);
+  };
 
   const onDelete = async (id: string) => {
     await removeList.mutateAsync({ id });
@@ -54,9 +66,25 @@ const ListCard = ({ list }: { list: TodoList & { TodoItems: TodoItem[] } }) => {
   return (
     <div className="m-2 block h-48 w-48 max-w-sm rounded-lg bg-white p-6 shadow-lg">
       <div className="flex justify-between">
-        <h5 className="mb-2 text-xl font-medium leading-tight text-gray-900">
-          {list.name}
-        </h5>
+        {edit ? (
+          <form onSubmit={(e) => onRename(e, { id: list.id, name: name })}>
+            <input
+              className="w-32 border-b-2 border-b-gray-500"
+              type="text"
+              id="edit-name"
+              name="editName"
+              onChange={(e) => setName(e.target.value)}
+              value={name}
+            />
+          </form>
+        ) : (
+          <h5
+            className="mb-2 text-xl font-medium leading-tight text-gray-900"
+            onClick={() => setEdit(true)}
+          >
+            {name}
+          </h5>
+        )}
         <h5
           className="mb-2 cursor-pointer text-xl font-medium leading-tight text-gray-300 hover:text-red-400"
           onClick={() => onDelete(list.id)}
