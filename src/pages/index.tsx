@@ -28,7 +28,7 @@ const Home: NextPage = () => {
             <>
               <div className="flex w-full flex-row items-center justify-center">
                 {data?.map((l) => (
-                  <ListCard list={l} />
+                  <ListCard key={l.id} list={l} />
                 ))}
                 <AddList />
               </div>

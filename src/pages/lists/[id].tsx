@@ -53,8 +53,8 @@ const TodoList: NextPage = () => {
             .with(P.nullish, { TodoItems: [] }, () => <p>No Items</p>)
             .with({ TodoItems: P.select("itms") }, ({ itms }) =>
               itms.map((itm) => (
-                <div className="flex w-48 justify-between">
-                  <div key={itm.id} onClick={() => complete(itm)}>
+                <div key={itm.id} className="flex w-48 justify-between">
+                  <div onClick={() => complete(itm)}>
                     <Todo item={itm} />
                   </div>
                   <p
